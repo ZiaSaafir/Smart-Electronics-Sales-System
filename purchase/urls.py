@@ -5,4 +5,5 @@ urlpatterns = [
     path('', views.purchase_list, name='purchase_list'),
     path('add/', views.add_purchase, name='add_purchase'),
     path('save/', views.save_purchase, name='save_purchase'),
+    path('create-product/', views.create_product, name='create_product'),
 ]

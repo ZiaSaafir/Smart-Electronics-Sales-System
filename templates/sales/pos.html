@@ -26,24 +26,48 @@
                     </button>
                 </div>
                 
-                <!-- Category Filters -->
+                <!-- Category Filters - Scrollable Compact Design -->
                 <div class="mb-3">
-                    <small class="text-muted d-block mb-2">Filter by Category:</small>
-                    <div class="d-flex flex-wrap gap-2" id="categoryFilters">
-                        <button class="btn btn-sm btn-primary" onclick="filterByCategory('all')">
-                            All Products
-                        </button>
-                        {% for category in categories %}
-                        <button class="btn btn-sm btn-outline-secondary" 
-                                onclick="filterByCategory('{{ category.name|lower }}')">
-                            <i class="fas fa-tag"></i> {{ category.name }}
-                        </button>
-                        {% endfor %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <small class="text-muted">Filter by Category:</small>
+                        <div>
+                            <select id="sortBy" class="form-select form-select-sm" style="width: auto; display: inline-block;" onchange="performSearch()">
+                                <option value="name_asc">Sort: Name A-Z</option>
+                                <option value="name_desc">Sort: Name Z-A</option>
+                                <option value="price_asc">Sort: Price (Low to High)</option>
+                                <option value="price_desc">Sort: Price (High to Low)</option>
+                                <option value="stock_asc">Sort: Stock (Low to High)</option>
+                                <option value="stock_desc">Sort: Stock (High to Low)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="category-wrapper" style="max-height: 80px; overflow-y: auto; border: 1px solid #e9ecef; border-radius: 8px; padding: 8px;">
+                        <div class="d-flex flex-wrap gap-2" id="categoryFilters">
+                            <button class="btn btn-sm btn-primary" onclick="filterByCategory('all')">
+                                All Products
+                            </button>
+                            {% for category in categories %}
+                            <button class="btn btn-sm btn-outline-secondary" 
+                                    onclick="filterByCategory('{{ category.name|lower }}')">
+                                {{ category.name }}
+                            </button>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Results Count -->
-                <div id="resultsCount" class="text-muted small mb-2"></div>
+                <!-- View Toggle & Results Count -->
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <div id="resultsCount" class="text-muted small"></div>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('list')" id="viewListBtn">
+                            <i class="fas fa-list"></i> List
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleView('grid')" id="viewGridBtn">
+                            <i class="fas fa-th"></i> Grid
+                        </button>
+                    </div>
+                </div>
                 
                 <!-- Search Results -->
                 <div id="searchResults" style="max-height: 500px; overflow-y: auto;"></div>
@@ -51,7 +75,7 @@
         </div>
     </div>
     
-    <!-- Right Column - Cart -->
+    <!-- Right Column - Cart (Same as before) -->
     <div class="col-lg-5">
         <!-- Customer Card -->
         <div class="card shadow-sm border-0 mb-3">
@@ -70,9 +94,9 @@
                     </div>
                     <div class="col-5">
                         <select id="paymentMethod" class="form-select">
-                            <option value="cash">💵 Cash</option>
-                            <option value="easypaisa">📱 EasyPaisa</option>
-                            <option value="card">💳 Card</option>
+                            <option value="cash">Cash</option>
+                            <option value="easypaisa">EasyPaisa</option>
+                            <option value="card">Card</option>
                         </select>
                     </div>
                 </div>
@@ -118,10 +142,10 @@
                 </div>
                 <div class="d-grid gap-2">
                     <button id="checkoutBtn" class="btn btn-success btn-lg" onclick="checkoutSale()">
-                        <i class="fas fa-check-circle"></i> Complete Sale (F5)
+                        Complete Sale (F5)
                     </button>
                     <button class="btn btn-outline-secondary" onclick="clearCart()">
-                        <i class="fas fa-trash-alt"></i> Clear Cart (Ctrl+C)
+                        Clear Cart (Ctrl+C)
                     </button>
                 </div>
             </div>
@@ -148,7 +172,8 @@
 // ============================================
 let cart = [];
 let currentCategory = 'all';
-let currentSearch = '';
+let currentView = 'list'; // list or grid
+let currentSort = 'name_asc';
 
 let allProducts = [
     {% for product in products %}
@@ -161,6 +186,62 @@ let allProducts = [
     }{% if not forloop.last %},{% endif %}
     {% endfor %}
 ];
+
+// ============================================
+// SORT FUNCTION
+// ============================================
+function sortProducts(products) {
+    let sortValue = document.getElementById('sortBy').value;
+    currentSort = sortValue;
+    
+    let sorted = [...products];
+    
+    switch(sortValue) {
+        case 'name_asc':
+            sorted.sort((a, b) => a.name.localeCompare(b.name));
+            break;
+        case 'name_desc':
+            sorted.sort((a, b) => b.name.localeCompare(a.name));
+            break;
+        case 'price_asc':
+            sorted.sort((a, b) => a.price - b.price);
+            break;
+        case 'price_desc':
+            sorted.sort((a, b) => b.price - a.price);
+            break;
+        case 'stock_asc':
+            sorted.sort((a, b) => a.stock - b.stock);
+            break;
+        case 'stock_desc':
+            sorted.sort((a, b) => b.stock - a.stock);
+            break;
+        default:
+            sorted.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return sorted;
+}
+
+// ============================================
+// VIEW TOGGLE
+// ============================================
+function toggleView(view) {
+    currentView = view;
+    let listBtn = document.getElementById('viewListBtn');
+    let gridBtn = document.getElementById('viewGridBtn');
+    
+    if (view === 'list') {
+        listBtn.classList.add('btn-primary');
+        listBtn.classList.remove('btn-outline-secondary');
+        gridBtn.classList.add('btn-outline-secondary');
+        gridBtn.classList.remove('btn-primary');
+    } else {
+        gridBtn.classList.add('btn-primary');
+        gridBtn.classList.remove('btn-outline-secondary');
+        listBtn.classList.add('btn-outline-secondary');
+        listBtn.classList.remove('btn-primary');
+    }
+    performSearch();
+}
 
 // ============================================
 // FILTER FUNCTIONS
@@ -182,7 +263,6 @@ function filterByCategory(category) {
 
 function performSearch() {
     let searchText = document.getElementById("productSearch").value.toLowerCase().trim();
-    currentSearch = searchText;
     
     let filtered = allProducts.filter(product => {
         if (currentCategory !== 'all' && product.category !== currentCategory) {
@@ -193,6 +273,9 @@ function performSearch() {
         }
         return true;
     });
+    
+    // Apply sorting
+    filtered = sortProducts(filtered);
     
     displayResults(filtered);
 }
@@ -208,37 +291,72 @@ function displayResults(products) {
         return;
     }
     
-    let html = '<div class="list-group">';
-    products.forEach(product => {
-        let stockBadge = '';
-        let disabledClass = '';
-        let disabledAttr = '';
-        
-        if (product.stock <= 0) {
-            stockBadge = '<span class="badge bg-danger ms-2">Out of Stock</span>';
-            disabledClass = 'opacity-50';
-            disabledAttr = 'disabled';
-        } else if (product.stock <= 5) {
-            stockBadge = `<span class="badge bg-warning ms-2">Low Stock (${product.stock})</span>`;
-        }
-        
-        html += `
-            <button type="button" 
-                    class="list-group-item list-group-item-action ${disabledClass}"
-                    onclick="addToCart('${product.id}', '${product.name.replace(/'/g, "\\'")}', ${product.price}, ${product.stock})"
-                    ${disabledAttr}>
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>${product.name}</strong>${stockBadge}<br>
-                        <small class="text-muted">Price: Rs ${product.price} | Stock: ${product.stock}</small>
+    if (currentView === 'list') {
+        // List View
+        let html = '<div class="list-group">';
+        products.forEach(product => {
+            let stockBadge = '';
+            let disabledClass = '';
+            let disabledAttr = '';
+            
+            if (product.stock <= 0) {
+                stockBadge = '<span class="badge bg-danger ms-2">Out of Stock</span>';
+                disabledClass = 'opacity-50';
+                disabledAttr = 'disabled';
+            } else if (product.stock <= 5) {
+                stockBadge = `<span class="badge bg-warning ms-2">Low Stock (${product.stock})</span>`;
+            }
+            
+            html += `
+                <button type="button" 
+                        class="list-group-item list-group-item-action ${disabledClass}"
+                        onclick="addToCart('${product.id}', '${product.name.replace(/'/g, "\\'")}', ${product.price}, ${product.stock})"
+                        ${disabledAttr}>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${product.name}</strong>${stockBadge}<br>
+                            <small class="text-muted">Price: Rs ${product.price} | Stock: ${product.stock}</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">Add</span>
                     </div>
-                    <span class="badge bg-primary rounded-pill">+ Add</span>
+                </button>
+            `;
+        });
+        html += '</div>';
+        resultsDiv.innerHTML = html;
+    } else {
+        // Grid View
+        let html = '<div class="row g-2">';
+        products.forEach(product => {
+            let stockBadge = '';
+            let disabledClass = '';
+            let disabledAttr = '';
+            
+            if (product.stock <= 0) {
+                stockBadge = '<span class="badge bg-danger">Out</span>';
+                disabledClass = 'opacity-50';
+                disabledAttr = 'disabled';
+            } else if (product.stock <= 5) {
+                stockBadge = `<span class="badge bg-warning">Low</span>`;
+            }
+            
+            html += `
+                <div class="col-6 col-md-4">
+                    <button type="button" 
+                            class="btn btn-outline-primary w-100 text-start p-2 ${disabledClass}"
+                            style="border-radius: 8px;"
+                            onclick="addToCart('${product.id}', '${product.name.replace(/'/g, "\\'")}', ${product.price}, ${product.stock})"
+                            ${disabledAttr}>
+                        <div class="small fw-bold">${product.name.substring(0, 20)}</div>
+                        <div class="small text-primary">Rs ${product.price}</div>
+                        <div class="small text-muted">Stock: ${product.stock} ${stockBadge}</div>
+                    </button>
                 </div>
-            </button>
-        `;
-    });
-    html += '</div>';
-    resultsDiv.innerHTML = html;
+            `;
+        });
+        html += '</div>';
+        resultsDiv.innerHTML = html;
+    }
 }
 
 // ============================================
@@ -260,24 +378,22 @@ function clearSearch() {
 // ADD TO CART (WITH STOCK VALIDATION)
 // ============================================
 function addToCart(id, name, price, stock) {
-    // Check stock before adding
     if (stock <= 0) {
-        alert("❌ Out of Stock! This product is not available.");
+        alert("Out of Stock! This product is not available.");
         return;
     }
     
     if (stock < 5) {
-        let confirmAdd = confirm(`⚠️ Low Stock Alert! Only ${stock} items left. Add anyway?`);
+        let confirmAdd = confirm(`Low Stock Alert! Only ${stock} items left. Add anyway?`);
         if (!confirmAdd) {
             return;
         }
     }
     
-    // Check if product already exists in cart
     let existing = cart.find(item => item.id == id);
     if (existing) {
         if (existing.qty + 1 > stock) {
-            alert(`❌ Cannot add more! Only ${stock} items available.`);
+            alert(`Cannot add more! Only ${stock} items available.`);
             return;
         }
         existing.qty += 1;
@@ -292,7 +408,6 @@ function addToCart(id, name, price, stock) {
     }
     renderCart();
     
-    // Clear search box and results
     document.getElementById("productSearch").value = "";
     performSearch();
     document.getElementById("productSearch").focus();
@@ -304,7 +419,7 @@ function renderCart() {
     let itemCount = 0;
     
     if (cart.length === 0) {
-        body.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-5">
+        body.innerHTML = `<td><td colspan="5" class="text-center text-muted py-5">
             <i class="fas fa-box-open fa-2x d-block mb-2"></i>Cart is empty
         \n</td></tr>`;
         document.getElementById("grandTotal").innerText = "0.00";
@@ -317,10 +432,6 @@ function renderCart() {
         let total = item.price * item.qty;
         grandTotal += total;
         itemCount += item.qty;
-        
-        // Find current stock for this product
-        let product = allProducts.find(p => p.id == item.id);
-        let currentStock = product ? product.stock : 0;
         
         body.innerHTML += `
         <tr>
@@ -335,8 +446,7 @@ function renderCart() {
             <td><small>${item.price}</small></td>
             <td><small>${total.toFixed(2)}</small></td>
             <td><button class="btn btn-sm btn-danger" onclick="removeItem(${index})"><i class="fas fa-trash"></i></button></td>
-        </tr>
-        `;
+        </tr>`;
     });
     
     document.getElementById("grandTotal").innerText = grandTotal.toFixed(2);
@@ -344,15 +454,12 @@ function renderCart() {
 }
 
 function updateQty(index, newQty) {
-    if (newQty < 1) {
-        newQty = 1;
-    }
+    if (newQty < 1) newQty = 1;
     
-    // Check against max stock
     let item = cart[index];
     let product = allProducts.find(p => p.id == item.id);
     if (product && newQty > product.stock) {
-        alert(`❌ Only ${product.stock} items available in stock.`);
+        alert(`Only ${product.stock} items available in stock.`);
         return;
     }
     
@@ -373,23 +480,22 @@ function clearCart() {
 }
 
 // ============================================
-// CHECKOUT WITH STOCK VALIDATION
+// CHECKOUT
 // ============================================
 function checkoutSale() {
     if (cart.length === 0) {
-        alert("❌ Cart is empty");
+        alert("Cart is empty");
         return;
     }
     
-    // Verify all items have sufficient stock
     for (let item of cart) {
         let product = allProducts.find(p => p.id == item.id);
         if (!product) {
-            alert(`❌ Product ${item.name} not found`);
+            alert(`Product ${item.name} not found`);
             return;
         }
         if (item.qty > product.stock) {
-            alert(`❌ Not enough stock for ${item.name}. Available: ${product.stock}`);
+            alert(`Not enough stock for ${item.name}. Available: ${product.stock}`);
             return;
         }
     }
@@ -416,9 +522,9 @@ function checkoutSale() {
         window.location.href = "/pos/invoice/" + data.sale_id + "/";
     })
     .catch(error => {
-        alert("❌ Checkout failed: " + error.message);
+        alert("Checkout failed: " + error.message);
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-check-circle"></i> Complete Sale (F5)';
+        btn.innerHTML = 'Complete Sale (F5)';
     });
 }
 
@@ -426,40 +532,20 @@ function checkoutSale() {
 // KEYBOARD SHORTCUTS
 // ============================================
 document.addEventListener('keydown', function(event) {
-    // F2 = Add to cart (from hidden dropdown)
     if (event.key === 'F2') {
         event.preventDefault();
         let select = document.getElementById("productSelect");
         let option = select.options[select.selectedIndex];
-        let productId = option.value;
-        let productName = option.dataset.name;
-        let productPrice = parseFloat(option.dataset.price);
-        let productStock = parseInt(option.dataset.stock || 0);
-        
-        if (productStock <= 0) {
-            alert("❌ Out of Stock!");
-            return;
-        }
-        
-        if (productStock < 5) {
-            if (!confirm(`⚠️ Low Stock! Only ${productStock} left. Add?`)) {
-                return;
-            }
-        }
-        
-        addToCart(productId, productName, productPrice, productStock);
+        addToCart(option.value, option.dataset.name, parseFloat(option.dataset.price), parseInt(option.dataset.stock || 0));
     }
-    // F5 = Checkout
     if (event.key === 'F5') {
         event.preventDefault();
         checkoutSale();
     }
-    // F3 = Focus search
     if (event.key === 'F3') {
         event.preventDefault();
         document.getElementById("productSearch").focus();
     }
-    // Ctrl+C = Clear cart
     if (event.ctrlKey && event.key === 'c') {
         event.preventDefault();
         clearCart();

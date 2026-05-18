@@ -11,6 +11,7 @@ from django.db.models import Sum, Count, F
 from django.utils import timezone
 from django.http import HttpResponse, JsonResponse
 from django.contrib.admin.views.decorators import staff_member_required
+from decouple import config
 
 from datetime import datetime, timedelta
 import pytz
@@ -20,6 +21,20 @@ import glob
 
 from products.models import Product
 from sales.models import Sale, SaleItem
+
+
+# ============================================================
+# DATABASE CONFIGURATION FROM ENVIRONMENT VARIABLES
+# ============================================================
+DB_NAME = config('DB_NAME', default='farman_pos_db')
+DB_USER = config('DB_USER', default='root')
+DB_PASSWORD = config('DB_PASSWORD', default='12345')
+DB_HOST = config('DB_HOST', default='localhost')
+DB_PORT = config('DB_PORT', default='3306')
+
+# Backup Configuration
+BACKUP_DIR = 'backups'
+BACKUP_RETENTION_DAYS = 7
 
 
 # ============================================================
@@ -169,11 +184,6 @@ def dashboard_home(request):
 # BACKUP SYSTEM (SAFE VERSION - NO RESTORE)
 # ============================================================
 
-# Database Configuration - Update these with your actual credentials
-BACKUP_DIR = 'backups'
-BACKUP_RETENTION_DAYS = 7
-
-
 @staff_member_required
 def create_backup(request):
     """
@@ -195,8 +205,8 @@ def create_backup(request):
     backup_file = os.path.join(BACKUP_DIR, filename)
     
     try:
-        # Execute MySQL dump command
-        cmd = f'mysqldump -u {DB_USER} -p{DB_PASSWORD} {DB_NAME} > "{backup_file}"'
+        # Execute MySQL dump command using environment variables
+        cmd = f'mysqldump -u {DB_USER} -p{DB_PASSWORD} -h {DB_HOST} -P {DB_PORT} {DB_NAME} > "{backup_file}"'
         subprocess.run(cmd, shell=True, check=True, capture_output=True, text=True)
         
         # Get file size for display
