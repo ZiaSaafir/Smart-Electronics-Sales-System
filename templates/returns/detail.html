@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">Return Details</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Return No:</strong> {{ return.return_no }}</p>
+                    <p><strong>Original Invoice:</strong> {{ return.original_sale.invoice_no }}</p>
+                    <p><strong>Date:</strong> {{ return.return_date|date:"d M Y h:i A" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Customer:</strong> {{ return.customer_name|default:"Walk-in" }}</p>
+                    <p><strong>Return Type:</strong> {{ return.get_return_type_display }}</p>
+                    <p><strong>Status:</strong> {{ return.get_status_display }}</p>
+                </div>
+            </div>
+            
+            <h5>Returned Items</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Refund Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in return.items.all %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>Rs {{ item.refund_price }}</td>
+                        <td>Rs {{ item.line_total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <p><strong>Reason:</strong> {{ return.reason }}</p>
+            <p><strong>Total Refund:</strong> Rs {{ return.refund_amount }}</p>
+            
+            <a href="/returns/invoice/{{ return.id }}/" class="btn btn-warning">Print Receipt</a>
+            <a href="/returns/" class="btn btn-secondary">Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

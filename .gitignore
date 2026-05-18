@@ -1,0 +1,80 @@
+# ----------------------------
+# Python
+# ----------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# ----------------------------
+# Virtual Environment
+# ----------------------------
+venv/
+env/
+.venv/
+
+# ----------------------------
+# Django
+# ----------------------------
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# ----------------------------
+# Environment Variables
+# ----------------------------
+.env
+.env.*
+*.env
+
+# ----------------------------
+# Static / Media Generated Files
+# ----------------------------
+media/
+staticfiles/
+
+# Keep your source static folder tracked if you use it
+# Do NOT ignore /static/ if it contains CSS/JS source files
+
+# ----------------------------
+# IDE / Editor
+# ----------------------------
+.vscode/
+.idea/
+
+# ----------------------------
+# OS Files
+# ----------------------------
+.DS_Store
+Thumbs.db
+
+# ----------------------------
+# Test / Coverage
+# ----------------------------
+.coverage
+htmlcov/
+.pytest_cache/
+
+# ----------------------------
+# Build / Packaging
+# ----------------------------
+dist/
+build/
+*.egg-info/
+
+# ----------------------------
+# MySQL Dumps / Backups
+# ----------------------------
+*.sql
+*.dump
+
+# ----------------------------
+# Node (if later React frontend)
+# ----------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*credentials.json
+credentials.json
+token.pickle
+*.pickle

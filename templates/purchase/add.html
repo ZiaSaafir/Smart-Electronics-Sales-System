@@ -1,0 +1,212 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">📦 Add New Purchase (Buy Stock)</h2>
+    
+    <!-- Supplier Selection -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <label class="form-label">Supplier (Optional)</label>
+            <select id="supplierSelect" class="form-select">
+                <option value="">-- Select Supplier --</option>
+                {% for supplier in suppliers %}
+                <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    
+    <!-- Search Product -->
+    <div class="mb-3">
+        <label class="form-label">Search Product</label>
+        <input type="text" id="productSearch" class="form-control" placeholder="Type product name...">
+        <div id="searchResults" class="mt-2" style="max-height: 300px; overflow-y: auto;"></div>
+    </div>
+    
+    <!-- Cart Table -->
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Product</th>
+                    <th width="120">Quantity</th>
+                    <th width="120">Cost Price</th>
+                    <th width="120">Total</th>
+                    <th width="80">Remove</th>
+                </tr>
+            </thead>
+            <tbody id="cartBody">
+                <tr>
+                    <td colspan="5" class="text-center">No items added</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <h3 class="text-end">Total: Rs <span id="grandTotal">0</span></h3>
+    
+    <button class="btn btn-success" onclick="savePurchase()">💾 Save Purchase</button>
+    <a href="/purchase/" class="btn btn-secondary">Cancel</a>
+</div>
+
+<script>
+// Cart array
+let cart = [];
+
+// Products data from Django
+let allProducts = [
+    {% for product in products %}
+    {
+        id: "{{ product.id }}",
+        name: "{{ product.name|escapejs }}",
+        price: {{ product.cost_price }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Search functionality
+let productSearch = document.getElementById("productSearch");
+let searchResultsDiv = document.getElementById("searchResults");
+
+productSearch.addEventListener("input", function() {
+    let searchText = this.value.toLowerCase().trim();
+    
+    if (searchText === "") {
+        searchResultsDiv.innerHTML = "";
+        return;
+    }
+    
+    let matched = allProducts.filter(p => p.name.toLowerCase().includes(searchText)).slice(0, 10);
+    
+    if (matched.length === 0) {
+        searchResultsDiv.innerHTML = '<div class="alert alert-warning">No products found</div>';
+        return;
+    }
+    
+    let html = '<div class="list-group">';
+    matched.forEach(product => {
+        html += `
+            <button type="button" class="list-group-item list-group-item-action" 
+                    onclick="addToCart('${product.id}', '${product.name.replace(/'/g, "\\'")}', ${product.price})">
+                <strong>${product.name}</strong><br>
+                <small>Cost Price: Rs ${product.price}</small>
+            </button>
+        `;
+    });
+    html += '</div>';
+    searchResultsDiv.innerHTML = html;
+});
+
+function addToCart(id, name, price) {
+    let existing = cart.find(item => item.id == id);
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        cart.push({id: id, name: name, price: price, qty: 1});
+    }
+    renderCart();
+    productSearch.value = "";
+    searchResultsDiv.innerHTML = "";
+    productSearch.focus();
+}
+
+function renderCart() {
+    let body = document.getElementById("cartBody");
+    body.innerHTML = "";
+    let grandTotal = 0;
+    
+    if (cart.length === 0) {
+        body.innerHTML = '<tr><td colspan="5" class="text-center">No items added</td></tr>';
+        document.getElementById("grandTotal").innerText = "0";
+        return;
+    }
+    
+    cart.forEach((item, index) => {
+        let total = item.price * item.qty;
+        grandTotal += total;
+        
+        body.innerHTML += `
+            <tr>
+                <td><strong>${item.name}</strong></td>
+                <td>
+                    <input type="number" min="1" value="${item.qty}" class="form-control" 
+                           style="width:80px" onchange="updateQty(${index}, this.value)">
+                </td>
+                <td>Rs ${item.price}</td>
+                <td>Rs ${total}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="removeItem(${index})">X</button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    document.getElementById("grandTotal").innerText = grandTotal;
+}
+
+function updateQty(index, qty) {
+    qty = parseInt(qty);
+    if (isNaN(qty) || qty < 1) qty = 1;
+    cart[index].qty = qty;
+    renderCart();
+}
+
+function removeItem(index) {
+    cart.splice(index, 1);
+    renderCart();
+}
+
+function savePurchase() {
+    if (cart.length === 0) {
+        alert("Please add at least one product");
+        return;
+    }
+    
+    let supplierId = document.getElementById("supplierSelect").value;
+    let btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = "Processing...";
+    
+    fetch("/purchase/save/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({
+            cart: cart,
+            supplier_id: supplierId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        window.location.href = "/purchase/";
+    })
+    .catch(error => {
+        alert("Error: " + error);
+        btn.disabled = false;
+        btn.innerHTML = "Save Purchase";
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+        let cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + "=")) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Focus search on page load
+document.getElementById("productSearch").focus();
+</script>
+{% endblock %}

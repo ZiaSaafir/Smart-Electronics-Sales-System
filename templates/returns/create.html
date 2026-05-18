@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">Process Return/Exchange</h2>
+    <p class="text-muted">Original Invoice: <strong>{{ sale.invoice_no }}</strong> | Customer: {{ sale.customer_name|default:"Walk-in" }}</p>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Select Items to Return</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="selectAll"></th>
+                                    <th>Product</th>
+                                    <th>Original Qty</th>
+                                    <th>Return Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Refund Price</th>
+                                    <th>Reason</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sold_items %}
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" class="item-checkbox" data-price="{{ item.price }}" data-product-id="{{ item.product.id }}" data-product-name="{{ item.product.name }}">
+                                    </td>
+                                    <td>{{ item.product.name }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm return-qty" style="width:80px" min="1" max="{{ item.quantity }}" value="{{ item.quantity }}" disabled>
+                                    </td>
+                                    <td>Rs {{ item.price }}</td>
+                                    <td>
+                                        <input type="number" class="form-control form-control-sm refund-price" style="width:100px" value="{{ item.price }}" step="0.01" disabled>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm reason-text" placeholder="Reason" disabled>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Return Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label>Return Type</label>
+                        <select id="returnType" class="form-select">
+                            <option value="refund">Refund Only</option>
+                            <option value="exchange">Exchange Product</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label>Reason for Return</label>
+                        <textarea id="mainReason" class="form-control" rows="3" placeholder="Customer reason..."></textarea>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <strong>Total Refund:</strong>
+                        <strong class="text-danger">Rs <span id="totalRefund">0.00</span></strong>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <button class="btn btn-warning" onclick="processReturn()">
+                            <i class="fas fa-undo-alt"></i> Process Return
+                        </button>
+                        <a href="/sales/" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function processReturn() {
+    const selectedItems = [];
+    const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+    
+    checkboxes.forEach((checkbox, index) => {
+        const row = checkbox.closest('tr');
+        const qty = row.querySelector('.return-qty').value;
+        const refundPrice = row.querySelector('.refund-price').value;
+        const reason = row.querySelector('.reason-text').value;
+        
+        selectedItems.push({
+            product_id: checkbox.dataset.productId,
+            product_name: checkbox.dataset.productName,
+            quantity: parseInt(qty),
+            refund_price: parseFloat(refundPrice),
+            reason: reason
+        });
+    });
+    
+    if (selectedItems.length === 0) {
+        alert("Please select at least one item to return");
+        return;
+    }
+    
+    const data = {
+        sale_id: {{ sale.id }},
+        return_type: document.getElementById('returnType').value,
+        reason: document.getElementById('mainReason').value,
+        items: selectedItems
+    };
+    
+    fetch("/returns/save/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        window.location.href = "/returns/invoice/" + data.return_id + "/";
+    })
+    .catch(error => alert("Error: " + error));
+}
+
+// Select all functionality
+document.getElementById('selectAll')?.addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = this.checked;
+        cb.dispatchEvent(new Event('change'));
+    });
+});
+
+// Update total when items selected
+document.querySelectorAll('.item-checkbox').forEach(cb => {
+    cb.addEventListener('change', function() {
+        const row = this.closest('tr');
+        const qtyInput = row.querySelector('.return-qty');
+        const priceInput = row.querySelector('.refund-price');
+        const reasonInput = row.querySelector('.reason-text');
+        
+        qtyInput.disabled = !this.checked;
+        priceInput.disabled = !this.checked;
+        reasonInput.disabled = !this.checked;
+        
+        updateTotal();
+    });
+    
+    document.querySelectorAll('.return-qty, .refund-price').forEach(input => {
+        input.addEventListener('input', () => updateTotal());
+    });
+});
+
+function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('.item-checkbox:checked').forEach(cb => {
+        const row = cb.closest('tr');
+        const qty = parseFloat(row.querySelector('.return-qty').value) || 0;
+        const price = parseFloat(row.querySelector('.refund-price').value) || 0;
+        total += qty * price;
+    });
+    document.getElementById('totalRefund').innerText = total.toFixed(2);
+}
+
+function getCookie(name) {
+    let value = null;
+    if (document.cookie) {
+        document.cookie.split(';').forEach(cookie => {
+            let c = cookie.trim();
+            if (c.startsWith(name + '=')) {
+                value = decodeURIComponent(c.substring(name.length + 1));
+            }
+        });
+    }
+    return value;
+}
+</script>
+{% endblock %}

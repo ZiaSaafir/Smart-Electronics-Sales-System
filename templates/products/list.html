@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">Product Management</h2>
+            <p class="text-muted">Manage your store inventory</p>
+        </div>
+        <div>
+            <a href="/admin/products/product/add/" class="btn btn-primary">
+                Add New Product
+            </a>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Products</h6>
+                    <h2 class="mb-0">{{ total_products }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Categories</h6>
+                    <h2 class="mb-0">{{ categories|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Brands</h6>
+                    <h2 class="mb-0">{{ brands|length }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Low Stock</h6>
+                    <h2 class="mb-0 text-warning">
+                        {% with low_stock=products|length %}
+                            {% for p in products %}
+                                {% if p.stock_quantity <= p.reorder_level %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    </h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search by name or SKU...">
+                </div>
+                <div class="col-md-3">
+                    <select id="categoryFilter" class="form-select">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.name|lower }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="brandFilter" class="form-select">
+                        <option value="">All Brands</option>
+                        {% for brand in brands %}
+                        <option value="{{ brand.name|lower }}">{{ brand.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-secondary w-100" onclick="clearFilters()">Clear Filters</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Products Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 pt-3">
+            <h5 class="mb-0">Product List</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="productsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Product Name</th>
+                            <th>SKU</th>
+                            <th>Category</th>
+                            <th>Brand</th>
+                            <th>Selling Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.id }}</td>
+                            <td>
+                                <strong>{{ product.name }}</strong><br>
+                                <small class="text-muted">{{ product.sku }}</small>
+                            </td>
+                            <td>{{ product.sku }}</td>
+                            <td>{{ product.category.name|default:"-" }}</td>
+                            <td>{{ product.brand.name|default:"-" }}</td>
+                            <td>Rs {{ product.selling_price }}</td>
+                            <td>
+                                {% if product.stock_quantity <= product.reorder_level %}
+                                    <span class="badge bg-warning">{{ product.stock_quantity }}</span>
+                                {% else %}
+                                    {{ product.stock_quantity }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if product.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group">
+                                    <a href="/admin/products/product/{{ product.id }}/change/" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        Edit
+                                    </a>
+                                    <a href="/admin/products/product/{{ product.id }}/delete/" 
+                                       class="btn btn-sm btn-outline-danger">
+                                        Delete
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">No products found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search and filter functionality
+document.getElementById('searchInput').addEventListener('keyup', filterTable);
+document.getElementById('categoryFilter').addEventListener('change', filterTable);
+document.getElementById('brandFilter').addEventListener('change', filterTable);
+
+function filterTable() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value.toLowerCase();
+    const brandFilter = document.getElementById('brandFilter').value.toLowerCase();
+    
+    const rows = document.querySelectorAll('#productsTable tbody tr');
+    
+    rows.forEach(row => {
+        const name = row.cells[1]?.textContent.toLowerCase() || '';
+        const sku = row.cells[2]?.textContent.toLowerCase() || '';
+        const category = row.cells[3]?.textContent.toLowerCase() || '';
+        const brand = row.cells[4]?.textContent.toLowerCase() || '';
+        
+        const matchesSearch = searchTerm === '' || name.includes(searchTerm) || sku.includes(searchTerm);
+        const matchesCategory = categoryFilter === '' || category === categoryFilter;
+        const matchesBrand = brandFilter === '' || brand === brandFilter;
+        
+        row.style.display = (matchesSearch && matchesCategory && matchesBrand) ? '' : 'none';
+    });
+}
+
+function clearFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('categoryFilter').value = '';
+    document.getElementById('brandFilter').value = '';
+    filterTable();
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Farman Electronics POS - Admin Panel{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">
+        <i class="fas fa-bolt"></i> Farman Electronics POS
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}
+<div style="background: #2c3e50; padding: 10px 20px; color: white;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <strong>Welcome, {{ user.get_full_name|default:user.username }}</strong>
+        </div>
+        <div>
+            <a href="/dashboard/" style="color: white; margin-right: 15px;">Dashboard</a>
+            <a href="/pos/" style="color: white; margin-right: 15px;">POS System</a>
+            <a href="/accounts/logout/" style="color: #ff6b6b;">Logout</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

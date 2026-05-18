@@ -1,0 +1,448 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <!-- Header with Date Range Picker -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">Dashboard</h2>
+            <p class="text-muted">Welcome back, {{ request.user.username }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <div class="btn-group">
+                <button class="btn btn-outline-secondary" onclick="setDateRange('today')">Today</button>
+                <button class="btn btn-outline-secondary" onclick="setDateRange('week')">This Week</button>
+                <button class="btn btn-outline-secondary" onclick="setDateRange('month')">This Month</button>
+                <button class="btn btn-outline-secondary" onclick="setDateRange('year')">This Year</button>
+            </div>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Report
+            </button>
+            <button class="btn btn-success" onclick="exportToExcel()">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </button>
+        </div>
+    </div>
+    
+    <!-- Stats Cards Row 1 -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Today's Sales</h6>
+                            <h2 class="mb-0 text-primary">Rs {{ today_sales|floatformat:0 }}</h2>
+                            <small class="text-muted">Avg Ticket: Rs {{ avg_ticket|floatformat:0 }}</small>
+                        </div>
+                        <div class="bg-primary bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-rupee-sign fa-2x text-primary"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Today's Profit</h6>
+                            <h2 class="mb-0 text-success">Rs {{ today_profit|floatformat:0 }}</h2>
+                            <small class="text-muted">Margin: {{ profit_margin }}%</small>
+                        </div>
+                        <div class="bg-success bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-chart-line fa-2x text-success"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Today's Invoices</h6>
+                            <h2 class="mb-0 text-info">{{ today_invoices }}</h2>
+                            <small class="text-muted">Total Transactions</small>
+                        </div>
+                        <div class="bg-info bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-receipt fa-2x text-info"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="text-muted mb-1">Low Stock Items</h6>
+                            <h2 class="mb-0 text-warning">{{ low_stock }}</h2>
+                            <small class="text-muted">Need reordering</small>
+                        </div>
+                        <div class="bg-warning bg-opacity-10 p-3 rounded">
+                            <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards Row 2 -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Products</h6>
+                    <h3>{{ total_products }}</h3>
+                    <small class="text-success"><i class="fas fa-box"></i> In Catalog</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Customers</h6>
+                    <h3>{{ total_customers }}</h3>
+                    <small class="text-success"><i class="fas fa-user-plus"></i> +{{ new_customers }} this month</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Invoices</h6>
+                    <h3>{{ total_invoices }}</h3>
+                    <small>All time sales</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="text-muted">Monthly Profit</h6>
+                    <h3 class="text-success">Rs {{ monthly_profit|floatformat:0 }}</h3>
+                    <small>This month</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h5 class="mb-0">Sales Overview (Last 7 Days)</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="salesChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pt-3">
+                    <h5 class="mb-0">Top Selling Products</h5>
+                </div>
+                <div class="card-body">
+                    <div id="topProductsList">
+                        {% for product in top_products %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <strong>{{ product.product__name }}</strong><br>
+                                <small class="text-muted">Sold: {{ product.total_quantity }} units</small>
+                            </div>
+                            <span class="badge bg-primary">Rs {{ product.total_sales|floatformat:0 }}</span>
+                        </div>
+                        {% empty %}
+                        <p class="text-muted text-center">No sales data yet</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Today's Transactions Table -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="fas fa-list text-primary me-2"></i>Today's Transactions
+            </h5>
+            <div>
+                <input type="text" id="searchTransaction" class="form-control form-control-sm" placeholder="Search by invoice or customer...">
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="transactionsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Invoice No</th>
+                            <th>Customer</th>
+                            <th>Payment</th>
+                            <th>Items</th>
+                            <th>Amount</th>
+                            <th>Time</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in today_transactions %}
+                        <tr>
+                            <td><strong>{{ sale.invoice_no }}</strong></td>
+                            <td>{{ sale.customer_name|default:"Walk-in Customer" }}</td>
+                            <td>
+                                <span class="badge {% if sale.payment_method == 'cash' %}bg-success{% elif sale.payment_method == 'easypaisa' %}bg-info{% else %}bg-secondary{% endif %}">
+                                    {{ sale.get_payment_method_display }}
+                                </span>
+                            </td>
+                            <td>{{ sale.items.count }}</td>
+                            <td>Rs {{ sale.total_amount|floatformat:2 }}</td>
+                            <td>{{ sale.created_at|date:"h:i A" }}</td>
+                            <td>
+                                <a href="/pos/invoice/{{ sale.id }}/" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <i class="fas fa-receipt fa-2x text-muted mb-2 d-block"></i>
+                                No sales today. Start selling!
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <th colspan="4" class="text-end">Total:</th>
+                            <th colspan="3">Rs {{ today_sales|floatformat:2 }}</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Low Stock Alert Section -->
+    {% if low_stock_products %}
+    <div class="card border-0 shadow-sm mb-4 border-warning">
+        <div class="card-header bg-warning bg-opacity-10 border-0 pt-3">
+            <h5 class="mb-0 text-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>Low Stock Alert
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Current Stock</th>
+                            <th>Reorder Level</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in low_stock_products %}
+                        <tr>
+                            <td>{{ product.name }}</td>
+                            <td class="{% if product.stock_quantity == 0 %}text-danger fw-bold{% endif %}">
+                                {{ product.stock_quantity }}
+                            </td>
+                            <td>{{ product.reorder_level }}</td>
+                            <td>
+                                {% if product.stock_quantity == 0 %}
+                                    <span class="badge bg-danger">Out of Stock</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Low Stock</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/admin/products/product/{{ product.id }}/change/" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-plus"></i> Add Stock
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Recent Invoices Section -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 pt-3">
+            <h5 class="mb-0">
+                <i class="fas fa-history text-primary me-2"></i>Recent Invoices
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Invoice No</th>
+                            <th>Customer</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sale in recent_sales %}
+                        <tr>
+                            <td>{{ sale.invoice_no }}</td>
+                            <td>{{ sale.customer_name|default:"Walk-in" }}</td>
+                            <td>Rs {{ sale.total_amount|floatformat:2 }}</td>
+                            <td>{{ sale.created_at|date:"d M Y h:i A" }}</td>
+                            <td>
+                                <a href="/pos/invoice/{{ sale.id }}/" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-print"></i> Print
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No invoices yet</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions Footer -->
+    <div class="row g-3 mt-2">
+        <div class="col-md-3">
+            <a href="/pos/" class="btn btn-primary w-100 py-3">
+                <i class="fas fa-cash-register fa-2x d-block mb-2"></i>
+                New Sale
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="/purchase/" class="btn btn-success w-100 py-3">
+                <i class="fas fa-truck fa-2x d-block mb-2"></i>
+                Add Purchase
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="/admin/products/product/" class="btn btn-info w-100 py-3">
+                <i class="fas fa-boxes fa-2x d-block mb-2"></i>
+                Manage Products
+            </a>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-secondary w-100 py-3" onclick="generateDailyReport()">
+                <i class="fas fa-chart-bar fa-2x d-block mb-2"></i>
+                Daily Report
+            </button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Sales Chart
+const ctx = document.getElementById('salesChart').getContext('2d');
+const salesChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+            label: 'Daily Sales (Rs)',
+            data: {{ chart_data|safe }},
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.1)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return 'Rs ' + context.raw.toLocaleString();
+                    }
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return 'Rs ' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Search transactions
+document.getElementById('searchTransaction')?.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#transactionsTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Export to Excel
+function exportToExcel() {
+    const table = document.querySelector('#transactionsTable');
+    const rows = table.querySelectorAll('tr');
+    let csv = [];
+    rows.forEach(row => {
+        const cols = row.querySelectorAll('th, td');
+        const rowData = Array.from(cols).map(col => col.innerText.replace(/,/g, ';'));
+        csv.push(rowData.join(','));
+    });
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sales_report_${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function generateDailyReport() {
+    window.print();
+}
+
+function setDateRange(range) {
+    window.location.href = `/dashboard/?range=${range}`;
+}
+</script>
+
+{% endblock %}

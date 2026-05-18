@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-warning text-white">
+            <h3 class="mb-0">Return Receipt</h3>
+        </div>
+        <div class="card-body">
+            <div class="text-center mb-4">
+                <h2>FARMAN ELECTRONICS</h2>
+                <p>Karkhano Market, Peshawar</p>
+                <hr>
+                <h4>RETURN / REFUND RECEIPT</h4>
+            </div>
+            
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <strong>Return No:</strong> {{ return.return_no }}<br>
+                    <strong>Original Invoice:</strong> {{ return.original_sale.invoice_no }}<br>
+                    <strong>Date:</strong> {{ return.return_date|date:"d M Y h:i A" }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Customer:</strong> {{ return.customer_name|default:"Walk-in" }}<br>
+                    <strong>Return Type:</strong> {{ return.get_return_type_display }}
+                </div>
+            </div>
+            
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Refund Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in return.items.all %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>Rs {{ item.refund_price }}</td>
+                        <td>Rs {{ item.line_total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-warning">
+                        <td colspan="3" class="text-end"><strong>Total Refund</strong></td>
+                        <td><strong>Rs {{ return.refund_amount }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <div class="mt-4">
+                <strong>Reason:</strong>
+                <p>{{ return.reason }}</p>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p class="text-muted">Thank you for shopping with us!</p>
+                <button onclick="window.print()" class="btn btn-primary">Print Receipt</button>
+                <a href="/returns/" class="btn btn-secondary">Back to Returns</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+/* Custom Admin Panel Styles */
+
+#header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: white;
+}
+
+#header a {
+    color: white;
+}
+
+.module h2, .module caption {
+    background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+}
+
+div.breadcrumbs {
+    background: #2c3e50;
+}
+
+.object-tools a {
+    background-color: #00d4ff;
+}
+
+.button, input[type=submit], input[type=button], .submit-row input {
+    background-color: #00d4ff;
+}
+
+.button.default, input[type=submit].default, .submit-row input.default {
+    background-color: #00c853;
+}
+
+#changelist-filter h2 {
+    background: #2c3e50;
+}
+
+.dashboard .module table th {
+    background: #f8f9fa;
+}
+
+/* Table hover effect */
+#result_list tbody tr:hover {
+    background-color: #f0f7ff;
+}
+
+/* Status badges */
+.field-is_active .boolean {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.field-is_active .boolean[value="True"] {
+    background: #d4edda;
+    color: #155724;
+}
+
+.field-is_active .boolean[value="False"] {
+    background: #f8d7da;
+    color: #721c24;
+}

@@ -1,0 +1,32 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div id="content-main">
+    <!-- Quick Stats Dashboard -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px;">
+            <h3>Today's Sales</h3>
+            <h2 style="font-size: 32px;">Rs {{ today_sales }}</h2>
+        </div>
+        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 10px;">
+            <h3>Total Products</h3>
+            <h2 style="font-size: 32px;">{{ total_products }}</h2>
+        </div>
+        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 10px;">
+            <h3>Total Invoices</h3>
+            <h2 style="font-size: 32px;">{{ total_invoices }}</h2>
+        </div>
+        <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 20px; border-radius: 10px;">
+            <h3>Low Stock</h3>
+            <h2 style="font-size: 32px;">{{ low_stock }}</h2>
+        </div>
+    </div>
+    
+    {{ block.super }}
+</div>
+
+<script>
+    // Add dashboard data via AJAX or context
+    // You'll need to pass these values from a custom admin view
+</script>
+{% endblock %}

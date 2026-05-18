@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="fas fa-exclamation-triangle text-warning me-2"></i>Low Stock Alert
+            </h2>
+            <p class="text-muted mt-2">Products that need immediate attention</p>
+        </div>
+        <div>
+            <a href="/purchase/" class="btn btn-success">
+                <i class="fas fa-truck"></i> Bulk Purchase
+            </a>
+        </div>
+    </div>
+    
+    {% if products %}
+        <!-- Stats Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Critical Stock</h6>
+                                <h2 class="mb-0 text-danger">{{ critical_count|default:"0" }}</h2>
+                                <small>Out of stock items</small>
+                            </div>
+                            <div class="bg-danger bg-opacity-10 p-3 rounded">
+                                <i class="fas fa-times-circle fa-2x text-danger"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Low Stock Warning</h6>
+                                <h2 class="mb-0 text-warning">{{ low_warning_count|default:"0" }}</h2>
+                                <small>Below reorder level</small>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                <i class="fas fa-exclamation-circle fa-2x text-warning"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="text-muted mb-1">Total Products</h6>
+                                <h2 class="mb-0 text-info">{{ total_products }}</h2>
+                                <small>In catalog</small>
+                            </div>
+                            <div class="bg-info bg-opacity-10 p-3 rounded">
+                                <i class="fas fa-boxes fa-2x text-info"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Alert Message -->
+        <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center">
+            <i class="fas fa-bell fa-2x me-3"></i>
+            <div>
+                <strong>{{ products|length }} product(s) need reordering.</strong>
+                <span class="text-muted ms-2">Please review and restock soon.</span>
+            </div>
+        </div>
+        
+        <!-- Products Table -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list text-primary me-2"></i>Products Needing Attention
+                    </h5>
+                    <div>
+                        <input type="text" id="searchProduct" class="form-control form-control-sm" placeholder="Search product...">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="lowStockTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Product Details</th>
+                                <th class="text-center">Current Stock</th>
+                                <th class="text-center">Reorder Level</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in products %}
+                            <tr class="{% if product.stock_quantity == 0 %}table-danger{% else %}table-warning{% endif %}">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            {% if product.image %}
+                                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px;">
+                                            {% else %}
+                                                <div style="width: 40px; height: 40px; background: #f0f2f5; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fas fa-box text-muted"></i>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <strong>{{ product.name }}</strong><br>
+                                            <small class="text-muted">SKU: {{ product.sku }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="fw-bold {% if product.stock_quantity == 0 %}text-danger{% else %}text-warning{% endif %}">
+                                        {{ product.stock_quantity }}
+                                    </span>
+                                </td>
+                                <td class="text-center align-middle">{{ product.reorder_level }}</td>
+                                <td class="text-center align-middle">
+                                    {% if product.stock_quantity == 0 %}
+                                        <span class="badge bg-danger px-3 py-2">
+                                            <i class="fas fa-ban me-1"></i> Out of Stock
+                                        </span>
+                                    elif product.stock_quantity <= product.reorder_level %}
+                                        <span class="badge bg-warning text-dark px-3 py-2">
+                                            <i class="fas fa-exclamation-triangle me-1"></i> Low Stock
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center align-middle">
+                                    <div class="btn-group">
+                                        <a href="/admin/products/product/{{ product.id }}/change/" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-plus"></i> Add Stock
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                                onclick="quickReorder('{{ product.id }}', '{{ product.name }}')">
+                                            <i class="fas fa-truck"></i> Quick Order
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer bg-white border-0 pt-3 text-center">
+                <a href="/purchase/" class="btn btn-outline-success">
+                    <i class="fas fa-shopping-cart"></i> Go to Purchase Section
+                </a>
+                <a href="/dashboard/" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-5">
+                <div class="mb-3">
+                    <i class="fas fa-check-circle text-success" style="font-size: 64px;"></i>
+                </div>
+                <h4 class="mb-2">All Products Have Sufficient Stock</h4>
+                <p class="text-muted mb-4">Good inventory management! No items need reordering at this time.</p>
+                <a href="/dashboard/" class="btn btn-primary">
+                    <i class="fas fa-chart-line"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Search functionality
+document.getElementById('searchProduct')?.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#lowStockTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+// Quick reorder alert
+function quickReorder(productId, productName) {
+    if(confirm(`Quick order for ${productName}? This will take you to purchase page.`)) {
+        window.location.href = `/purchase/?product=${productId}`;
+    }
+}
+</script>
+
+{% endblock %}

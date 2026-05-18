@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h2 class="mb-4">📦 Purchase History</h2>
+    
+    <a href="/purchase/add/" class="btn btn-primary mb-3">
+        + New Purchase (Buy Stock)
+    </a>
+    
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th>Invoice No</th>
+                    <th>Supplier</th>
+                    <th>Total Amount</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for purchase in purchases %}
+                <tr>
+                    <td>{{ purchase.invoice_no }}</td>
+                    <td>{{ purchase.supplier.name|default:"-" }}</td>
+                    <td>Rs {{ purchase.total_amount }}</td>
+                    <td>{{ purchase.created_at|date:"d M Y h:i A" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No purchases yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

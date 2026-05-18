@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farman Electronics POS</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .sidebar-text,
+        .sidebar.collapsed .sidebar-title,
+        .sidebar.collapsed .social-links span {
+            display: none;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+        }
+
+        .sidebar.collapsed .nav-link {
+            text-align: center;
+            padding: 12px 0;
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .logo-img {
+            width: 40px;
+            height: 40px;
+        }
+
+        /* Sidebar Content Wrapper */
+        .sidebar-content {
+            flex: 1;
+            padding: 20px 15px;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            right: -12px;
+            top: 20px;
+            background: #1e293b;
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1001;
+            transition: all 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+            background: #3b82f6;
+        }
+
+        /* Logo Section */
+        .logo-section {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo-img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .shop-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: white;
+            margin: 0;
+        }
+
+        .shop-tagline {
+            font-size: 10px;
+            color: #94a3b8;
+            margin: 0;
+        }
+
+        /* Social Links in Sidebar */
+        .social-links {
+            padding: 15px 0;
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .social-links a {
+            color: #94a3b8;
+            margin: 0 10px;
+            transition: all 0.3s;
+            font-size: 18px;
+            display: inline-block;
+        }
+
+        .social-links a:hover {
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .social-links span {
+            display: block;
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 8px;
+        }
+
+        /* Main Content */
+        .main-content {
+            margin-left: 260px;
+            transition: all 0.3s ease;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-content.expanded {
+            margin-left: 70px;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar .nav-link {
+            padding: 10px 15px;
+            color: #cbd5e1;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 5px;
+        }
+
+        .sidebar .nav-link:hover {
+            background: rgba(59, 130, 246, 0.2);
+            color: white;
+        }
+
+        .sidebar .nav-link.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .sidebar .nav-link i {
+            width: 20px;
+            text-align: center;
+        }
+
+        hr {
+            margin: 15px 0;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Mobile Styles */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1002;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+        }
+
+        /* Scrollbar Styling */
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 4px;
+        }
+
+        /* Responsive Cards */
+        @media (max-width: 576px) {
+            .main-content {
+                padding: 10px;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Mobile Toggle Button -->
+    <button class="btn btn-primary mobile-toggle" onclick="toggleMobileSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-chevron-left" id="toggleIcon"></i>
+        </button>
+
+        <div class="sidebar-content">
+            <!-- Logo Section -->
+            <div class="logo-section">
+                {% load static %}
+                <img src="{% static 'images/farmanLogo.png' %}" alt="Farman Electronics" class="logo-img"
+                    onerror="this.src='https://via.placeholder.com/60?text=FE'">
+                <h5 class="shop-name sidebar-title">Farman Electronics</h5>
+                <small class="shop-tagline sidebar-text">Since 1995</small>
+            </div>
+
+            <!-- Navigation Menu -->
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="/dashboard/" class="nav-link">
+                        <i class="fas fa-chart-line"></i>
+                        <span class="sidebar-text">Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/pos/" class="nav-link">
+                        <i class="fas fa-cash-register"></i>
+                        <span class="sidebar-text">Point of Sale</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/products/" class="nav-link">
+                        <i class="fas fa-boxes"></i>
+                        <span class="sidebar-text">Products</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/low-stock/" class="nav-link">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span class="sidebar-text">Low Stock</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/purchase/" class="nav-link">
+                        <i class="fas fa-truck"></i>
+                        <span class="sidebar-text">Purchase</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/returns/" class="nav-link">
+                        <i class="fas fa-undo-alt"></i>
+                        <span class="sidebar-text">Returns</span>
+                    </a>
+                </li>
+        <li class="nav-item mb-1">
+    <a href="/sales/history/" class="nav-link">
+        <i class="fas fa-file-invoice"></i>
+        <span class="sidebar-text">Sales History</span>
+    </a>
+</li>
+            </ul>
+
+            <hr>
+
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a href="/admin/" class="nav-link">
+                        <i class="fas fa-user-shield"></i>
+                        <span class="sidebar-text">Admin Panel</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/accounts/logout/" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="sidebar-text">Logout</span>
+                    </a>
+                </li>
+                <li class="nav-item mb-1">
+                    <a href="/backup/" class="nav-link">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <span class="sidebar-text">Backup to Cloud</span>
+                    </a>
+                </li>
+                <!-- Backup Section in Sidebar -->
+                <li class="nav-item mb-1">
+                    <a href="/backup-list/" class="nav-link">
+                        <i class="fas fa-list"></i>
+                        <span class="sidebar-text">Backup Manager</span>
+                    </a>
+                </li>
+
+
+
+            </ul>
+        </div>
+
+        <!-- Social Links - Now at bottom properly -->
+        <div class="social-links">
+            <a href="https://www.facebook.com/farmanelectronics" target="_blank" title="Facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="#" target="_blank" title="YouTube">
+                <i class="fab fa-youtube"></i>
+            </a>
+            <a href="#" target="_blank" title="Instagram">
+                <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" target="_blank" title="WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+            <span class="sidebar-text">Connect with us</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+        <!-- Top Bar -->
+        <div class="top-bar d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-0">
+                    <i class="fas fa-store text-primary me-2"></i>
+                    Farman Electronics POS
+                </h5>
+            </div>
+            <div class="d-flex align-items-center">
+                <div class="me-3">
+                    <small class="text-muted">
+                        <i class="far fa-clock"></i>
+                        <span id="liveClock"></span>
+                    </small>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle"></i> {{ request.user.username|default:"Guest" }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/dashboard/">
+                                <i class="fas fa-chart-line"></i> Dashboard
+                            </a></li>
+                        <li><a class="dropdown-item" href="/pos/">
+                                <i class="fas fa-cash-register"></i> POS
+                            </a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li><a class="dropdown-item text-danger" href="/accounts/logout/">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Content -->
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Live Clock
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('liveClock').innerHTML = now.toLocaleTimeString('en-PK');
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Toggle Sidebar (Collapse/Expand)
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            const icon = document.getElementById('toggleIcon');
+
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+
+            if (sidebar.classList.contains('collapsed')) {
+                icon.classList.remove('fa-chevron-left');
+                icon.classList.add('fa-chevron-right');
+            } else {
+                icon.classList.remove('fa-chevron-right');
+                icon.classList.add('fa-chevron-left');
+            }
+        }
+
+        // Mobile Sidebar Toggle
+        function toggleMobileSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // Close mobile sidebar when clicking a link
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    document.getElementById('sidebar').classList.remove('mobile-open');
+                }
+            });
+        });
+
+        // Active menu highlight
+        const currentUrl = window.location.pathname;
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && currentUrl.includes(href) && href !== '/') {
+                link.classList.add('active');
+            } else if (currentUrl === '/' && href === '/dashboard/') {
+                link.classList.add('active');
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>
