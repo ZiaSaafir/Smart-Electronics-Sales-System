@@ -1,78 +1,108 @@
-# Smart Electronics Sales System
+# Smart Electronics Sales System - POS Application
 
-A complete Point of Sale (POS) system for electronics shops, built with Django. Includes inventory tracking, sales management, customer records, and profit analytics.
+##  Project Information
 
-## Tech Stack
+### Group Information
+- **Group Number:** 18
+- **Group Members:**
+   Name  Roll Number 
+   
+   Moiz khalid 24p0742 
+   Zia ullah   24p0660 
+   Qasim       24p0672 
 
-- Python 3.13
-- Django 6.0
-- MySQL
-- Bootstrap 5
-- JavaScript
-- Chart.js
+### Project Title
+**Smart Electronics Sales System - Point of Sale (POS) Application**
 
-## Features
+### Short Description
+A comprehensive Point of Sale (POS) system designed for electronics shops to manage sales, inventory, and customer transactions. The system provides an intuitive interface for cashiers to process sales, manage products, track inventory, and generate invoices. It includes role-based access control with admin and cashier privileges, real-time stock management, and printable receipts.
 
-### Sales & Billing
-- Fast product search (name, SKU, or barcode)
-- Add/remove items from cart
-- Quantity adjustment with +/- buttons
-- Customer name and phone collection
-- Multiple payment methods (Cash, EasyPaisa, Card)
-- Printable invoice (thermal printer ready)
-- Keyboard shortcuts (F2=Add, F5=Checkout, F3=Search)
+**Key Features:**
+- Complete CRUD operations for Products, Categories, and Customers
+- Real-time inventory management
+- Sales transaction processing with invoice generation
+- User authentication with role-based access (Admin/Cashier)
+- Search and filter functionality
+- Sales reports and analytics dashboard
+- Printable receipts for thermal printers
 
-### Inventory Management
-- Product catalog with categories and brands
-- Stock tracking with automatic deduction on sale
-- Low stock alerts based on reorder levels
-- Purchase order system for buying new stock
-- Stock increase on purchase confirmation
-- Supplier records
+---
 
-### Dashboard & Analytics
-- Today's sales, profit, and invoice count
-- Monthly profit calculation
-- Low stock summary
-- Today's transaction list
-- Recent invoices (last 5)
-- Sales chart visualization
+##  GitHub Repository
 
-### Administration
-- Django admin panel for full control
-- Role-based access (Admin, Cashier)
-- Product and category management
-- Purchase history
-- Database backup ready
+**Repository URL:** [https://github.com/ZiaSaafir/Smart-Electronics-Sales-System](https://github.com/ZiaSaafir/Smart-Electronics-Sales-System)
 
-## Installation
+---
 
-### Prerequisites
-- Python 3.11 or higher
-- MySQL server
-- pip package manager
+##  Technologies Used
 
-### Setup Instructions
+| Category | Technologies |
+|----------|--------------|
+| **Backend Framework** | Django 4.2 (Python Web Framework) |
+| **Frontend** | HTML5, CSS3, Bootstrap 5, JavaScript |
+| **Database** | MySQL 8.0 / SQLite3 |
+| **Server** | Django Development Server |
+| **Additional Libraries** | django-crispy-forms, reportlab (PDF generation), Pillow (image handling) |
+| **Version Control** | Git & GitHub |
 
-1. Clone the repository
-```bash
-git clone https://github.com/ZiaSaafir/Smart-Electronics-Sales-System.git
-cd Smart-Electronics-Sales-System
-2Create virtual environment
+---
 
+##  Installation and Setup Guide
+
+### System Requirements
+- Windows 10/11, Linux, or macOS
+- 4GB RAM minimum
+- 20GB free disk space
+- Internet connection (for initial setup)
+
+### Prerequisites Installation
+
+#### 1. Install Python 3.11
+- Download from: https://www.python.org/downloads/
+- **IMPORTANT:** Check "Add Python to PATH" during installation
+- Verify installation:
+  ```bash
+  python --version
+2. Install MySQL (Optional - for production)
+Download from: https://dev.mysql.com/downloads/installer/
+
+Set root password (remember it!)
+
+Or use SQLite (no installation needed)
+
+Step-by-Step Installation
+Step 1: Clone the Repository
 bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-Install dependencies
+# Clone from GitHub
+git clone https://github.com/ZiaSaafir/Smart-Electronics-Sales-System.git
 
+# Navigate to project directory
+cd Smart-Electronics-Sales-System
+Step 2: Create Virtual Environment
+bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On Linux/macOS:
+source venv/bin/activate
+Step 3: Install Dependencies
 bash
 pip install -r requirements.txt
-Configure MySQL database
-Create database in MySQL:
+Step 4: Configure Database
+Option A: Using SQLite (Default - No setup required)
+
+No additional configuration needed
+
+Option B: Using MySQL (Recommended for production)
+
+Create database:
 
 sql
-CREATE DATABASE farman_pos_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-Update database settings in config/settings.py:
+CREATE DATABASE farman_pos_db CHARACTER SET utf8mb4;
+Update config/settings.py:
 
 python
 DATABASES = {
@@ -85,71 +115,34 @@ DATABASES = {
         'PORT': '3306',
     }
 }
-Run migrations
-
+Step 5: Run Migrations
 bash
 python manage.py makemigrations
 python manage.py migrate
-Create admin user
-
+Step 6: Create Admin User
 bash
 python manage.py createsuperuser
-Run development server
+Follow prompts to create admin account.
 
+Step 7: Create Cashier User
+bash
+python manage.py shell
+python
+from django.contrib.auth.models import User
+from accounts.models import UserProfile
+
+cashier = User.objects.create_user('cashier', 'cashier@shop.com', 'cashier123')
+UserProfile.objects.create(user=cashier, role='cashier')
+exit()
+Step 8: Collect Static Files
+bash
+python manage.py collectstatic --noinput
+Step 9: Run the Application
 bash
 python manage.py runserver
-Access the application
+Step 10: Access the Application
+Open browser and navigate to: http://127.0.0.1:8000
 
-POS Interface: http://127.0.0.1:8000/pos/
+Admin Panel: http://127.0.0.1:8000/admin
 
-Admin Panel: http://127.0.0.1:8000/admin/
-
-Dashboard: http://127.0.0.1:8000/dashboard/
-
-Project Structure
-text
-farman_pos/
-├── config/          # Project settings and URLs
-├── products/        # Product, category, brand models
-├── sales/           # POS, checkout, invoice logic
-├── dashboard/       # Analytics and reports
-├── inventory/       # Stock management
-├── purchase/        # Purchase orders and suppliers
-├── templates/       # HTML templates
-├── static/          # CSS, JS, images
-└── manage.py        # Django management script
-Keyboard Shortcuts
-Key	Action
-F2	Add current product to cart
-F3	Focus search box
-F5	Checkout / Complete sale
-Ctrl+C	Clear entire cart
-Screenshots
-POS Billing Interface
-Main sales screen with product search and cart management.
-
-Dashboard
-Real-time sales analytics and low stock alerts.
-
-Invoice
-Printable receipt with customer and payment details.
-
-Product Management
-Product catalog with stock status and search filters.
-
-Deployment
-Local Shop PC (Windows)
-Install Python and MySQL on shop computer
-
-Copy project folder to C:\farman_pos
-
-Create virtual environment and install dependencies
-
-Configure database with shop's MySQL
-
-Run migrations and create admin user
-
-Use start_pos.bat for one-click launch
-
-Production Settings
-Set DEBUG = False in production and configure ALLOWED_HOSTS with your shop's IP address.
+POS Interface: http://127.0.0.1:8000/pos
